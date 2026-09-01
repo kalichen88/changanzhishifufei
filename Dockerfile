@@ -19,6 +19,8 @@ COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/node_modules/prisma ./node_modules/prisma
 COPY --from=build /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=build /app/node_modules/tsx ./node_modules/tsx
+# SheetJS xlsx 含动态 require(cpexcel.js)，Nitro 构建时会外置到 node_modules，运行时需随镜像拷贝
+COPY --from=build /app/node_modules/xlsx ./node_modules/xlsx
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/package.json ./package.json
 EXPOSE 3000
