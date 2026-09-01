@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 模板选择（落地页模板）
 import { ElMessage } from 'element-plus'
 

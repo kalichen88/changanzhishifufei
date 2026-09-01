@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 订单列表（扣量筛选 / 详情）
 import { ElMessage } from 'element-plus'
 

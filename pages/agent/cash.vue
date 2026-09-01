@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 提现申请（列表 + 申请表单）
 import { ElMessage } from 'element-plus'
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 盒子链接（推广落地盒 CRUD）
 import { ElMessage, ElMessageBox } from 'element-plus'
 

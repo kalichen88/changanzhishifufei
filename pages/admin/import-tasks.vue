@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 导入任务中心 + 文件导入 / 文本粘贴导入
 import { ElMessage } from 'element-plus'
 

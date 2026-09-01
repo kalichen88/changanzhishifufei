@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 系统配置（KV 编辑，还原原版 site.php 关键项）
 import { ElMessage } from 'element-plus'
 

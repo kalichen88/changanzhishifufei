@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 代理数据面板
 const { api } = useAgentApi()
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 支付配置（占位：mock 默认 + epay 骨架）
 import { ElMessage } from 'element-plus'
 

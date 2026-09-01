@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 独立定价：单视频改价 + 一键批量改价
 import { ElMessage } from 'element-plus'
 

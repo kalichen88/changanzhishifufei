@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 总后台数据看板
 const { api } = useAdminApi()
 

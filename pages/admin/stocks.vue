@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 片库管理（列表 + 新增 + 编辑 + 导入入口）
 import { ElMessage, ElMessageBox } from 'element-plus'
 

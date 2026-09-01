@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 我的域名（含推广主链类型说明）
 const { api } = useAgentApi()
 

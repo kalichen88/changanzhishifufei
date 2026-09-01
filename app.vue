@@ -1,15 +1,13 @@
 <script setup lang="ts">
-// 依据路由自动切换布局：H5 前台 / 总后台 / 代理后台
-const route = useRoute()
-const layout = computed<'h5' | 'admin' | 'agent'>(() => {
-  if (route.path.startsWith('/admin')) return 'admin'
-  if (route.path.startsWith('/agent')) return 'agent'
-  return 'h5'
-})
+// 布局由各页面 definePageMeta 声明（不在此强制，避免覆盖 layout:false）：
+// - H5 前台页：layout: 'h5'
+// - 总后台页：layout: 'admin'
+// - 代理后台页：layout: 'agent'
+// - 登录页 / 根跳转页 / pc-blocked：layout: false（无布局，独立全屏）
 </script>
 
 <template>
-  <NuxtLayout :name="layout">
+  <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
 </template>

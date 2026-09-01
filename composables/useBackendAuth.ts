@@ -14,11 +14,17 @@ export function useBackendAuth(key: string) {
         me.value = r.data.admin
         return me.value
       }
-    } catch {
-      /* ignore */
+      me.value = null
+      return null // 明确未登录 / 登录已失效
+    } catch (e: any) {
+      // 401：登录过期，交给 useApi 统一清 token 并踢回登录页
+      if (e?.response?.status === 401) {
+        me.value = null
+        return null
+      }
+      // 网络抖动 / 服务端瞬时错误：不视为掉线，保留登录态
+      return undefined
     }
-    me.value = null
-    return null
   }
 
   function logout(api: (url: string, opts?: Record<string, any>) => Promise<any>) {

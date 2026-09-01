@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 模板管理（落地模板启停）
 import { ElMessage } from 'element-plus'
 

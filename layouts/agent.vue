@@ -31,12 +31,12 @@ onMounted(async () => {
     return
   }
   const m = await auth.fetchMe(api)
-  if (!m) {
+  if (m === null) {
     ElMessage.error('登录已过期')
     router.replace('/agent/login')
     return
   }
-  me.value = m
+  if (m) me.value = m
 })
 
 function handleLogout() {

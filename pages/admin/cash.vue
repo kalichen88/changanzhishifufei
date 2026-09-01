@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 提现审核（待审 → 通过/驳回 → 确认打款）
 import { ElMessage, ElMessageBox } from 'element-plus'
 

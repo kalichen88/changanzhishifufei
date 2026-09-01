@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 代理管理（列表 + 新建 + 编辑 + 调余额 + 绑定域名 + 树视图）
 import { ElMessage, ElMessageBox } from 'element-plus'
 

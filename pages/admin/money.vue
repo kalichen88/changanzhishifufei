@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'admin' })
 // 余额流水（扣量可审计：biz=kouliang 单独打标）
 const { api } = useAdminApi()
 

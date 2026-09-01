@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 推广中心：独立域名推广链接 + 二维码
 import { ElMessage } from 'element-plus'
 

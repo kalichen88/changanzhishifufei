@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'agent' })
 // 我的订单（含扣量状态列）
 const { api } = useAgentApi()
 
