@@ -16,3 +16,8 @@ deploy/.env
 q.js
 db_domains.cjs
 changan_nginx.conf
+
+# 敏感/调试文件（禁止入库）
+salt.txt
+fcodes*.cjs
+hashids_*.cjs
