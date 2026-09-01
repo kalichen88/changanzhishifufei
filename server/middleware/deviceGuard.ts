@@ -11,11 +11,12 @@ import { prisma } from '../utils/prisma'
  */
 export default defineEventHandler(async (event) => {
   const url = event.path || ''
-  console.log('[deviceGuard][DEBUG] ALL path=', JSON.stringify(url))
 
   // 放行：静态资源 / 后台 / API 后台
   if (
     url.startsWith('/_nuxt') ||
+    // Nuxt 内部 404/错误页渲染路由（页面不存在时中间件会二次执行，必须放行）
+    url.startsWith('/__nuxt_error') ||
     url.startsWith('/_ipx') ||
     url.startsWith('/favicon') ||
     url.startsWith('/assets') ||
