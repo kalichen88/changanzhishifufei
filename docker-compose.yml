@@ -57,7 +57,8 @@ services:
       PORT: 3000
     ports:
       - "3000:3000"
-    command: sh -c "npx prisma migrate deploy && node .output/server/index.mjs"
+    # 生产镜像未拷贝 node_modules/.bin，故用完整路径调用 prisma CLI 执行迁移
+    command: sh -c "node ./node_modules/prisma/build/index.js migrate deploy && node .output/server/index.mjs"
 
 volumes:
   mysql_data:
