@@ -1,6 +1,11 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
+  routeRules: {
+    // 后台为纯管理界面：关闭 SSR，避免 Element Plus 在服务端渲染水合报错
+    '/admin/**': { ssr: false },
+    '/agent/**': { ssr: false },
+  },
   css: [
     'vant/lib/index.css',
     'element-plus/dist/index.css',
