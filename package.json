@@ -1,0 +1,55 @@
+{
+  "name": "chang-an-knowledge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "element-plus": "^2.9.0",
+    "hashids": "^2.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.5",
+    "nuxt": "^3.15.0",
+    "qrcode": "^1.5.4",
+    "redis": "^4.7.0",
+    "vant": "^4.9.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.5",
+    "@types/qrcode": "^1.5.5",
+    "prisma": "^5.22.0",
+    "sass": "^1.83.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "prisma@5.22.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "@prisma/engines@5.22.0": true,
+    "@parcel/watcher@2.6.0": true
+  }
+}

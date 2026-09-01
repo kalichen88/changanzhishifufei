@@ -1,0 +1,195 @@
+// ===== 全局样式（还原原版 lbzynjk 视觉）=====
+$primary: #f53036;
+$primary-dark: #da2b30;
+$blue: #2d8cf0;
+$text-main: #323233;
+$text-sub: #969799;
+
+html,
+body {
+  width: 100%;
+  background: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, Helvetica,
+    Segoe UI, Arial, Roboto, PingFang SC, miui, Hiragino Sans GB,
+    Microsoft Yahei, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+ul,
+li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.color-ff {
+  color: #fff !important;
+}
+
+.color-red {
+  color: $primary !important;
+}
+
+.bg-red {
+  background: $primary !important;
+  border-color: $primary !important;
+}
+
+// ===== H5 公共 =====
+.h5-page {
+  min-height: 100vh;
+  padding-bottom: 58px;
+  background: #f7f8fa;
+}
+
+.h5-navbar {
+  background: linear-gradient(180deg, $primary, $primary-dark) !important;
+  .van-nav-bar__title,
+  .van-icon,
+  .van-nav-bar__text {
+    color: #fff !important;
+  }
+  &.van-nav-bar--fixed {
+    z-index: 20;
+  }
+}
+
+.h5-header-bg {
+  height: 200px;
+  background: url('/h5/img/bg-header.png') center top / cover no-repeat;
+}
+
+// ===== 双列瀑布流卡片 =====
+.waterfall {
+  column-count: 2;
+  column-gap: 8px;
+  padding: 8px;
+}
+
+.cc_card {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  .cover {
+    position: relative;
+    width: 100%;
+    display: block;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    background: #eee;
+  }
+  .tag {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .tag-paid {
+    background: linear-gradient(135deg, #ff9d00, #f53036);
+  }
+  .title {
+    padding: 6px 8px 2px;
+    font-size: 13px;
+    color: $text-main;
+    line-height: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 8px 8px;
+    font-size: 11px;
+    color: $text-sub;
+  }
+  .play {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .van-icon {
+      color: #fff;
+      font-size: 12px;
+    }
+  }
+}
+
+// ===== 底部 tabbar 悬浮 =====
+.h5-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  :deep(.van-tabbar-item--active) {
+    color: $primary;
+  }
+}
+
+.h5-notice {
+  :deep(.van-notice-bar) {
+    background: #fff7e6;
+  }
+}
+
+.pay-sheet {
+  .van-popup {
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+// 桌面端兜底（后端已拦截，这里仅防御）
+.desktop-guard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fa;
+  color: $text-main;
+  text-align: center;
+  padding: 24px;
+}
+
+// ===== 后台通用 =====
+.admin-layout {
+  min-height: 100vh;
+}
+
+.admin-main {
+  padding: 16px;
+}
+
+.page-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}

@@ -1,0 +1,505 @@
+// =============================================================
+// 长安银河知识付费系统 · 复刻版 — Prisma Schema（唯一事实来源）
+// 以原版 长安银河数据库.sql 为底稿，表/字段转英文小写下划线
+// 时间统一 DateTime（DB 层 datetime），枚举用数字/字符串常量
+// =============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ 1. admins（站长 + 代理）最核心表 ============
+model Admin {
+  @@map("admins")
+  id         Int       @id @default(autoincrement())
+  pid        Int       @default(0) // 直接上级代理ID；0=无
+  pidTop     Int       @default(1) // 顶级代理ID；站长=自己
+  username   String    @unique @db.VarChar(30)
+  nickname   String    @db.VarChar(50)
+  password   String    @db.VarChar(255) // bcrypt 哈希
+  avatar     String?   @db.VarChar(255)
+  role       String    @default("agent") // "admin"站长 | "agent"代理
+  viewId     Int       @default(4) // 模板ID
+  balance    Decimal   @default(0) @db.Decimal(11, 2) // 余额（元）
+  kouliang   Int       @default(0) // 扣量：每N单扣1单；0=不扣
+  ticheng    Int       @default(0) // 提成%：给直接上级
+  minFee     Int       @default(0) // 最低提现
+  poundage   Int       @default(0) // 提现手续费%
+  dateFee    Int       @default(0) // 包日金额（元）
+  weekFee    Int       @default(0) // 包周金额
+  monthFee   Int       @default(0) // 包月金额
+  bt         Int       @default(0) // 是否开放包日（1/0）
+  by         Int       @default(0) // 是否开放包月（1/0）
+  payModel   String    @default("0") // 支付通道1
+  payModel1  String?   @default("0") // 支付通道2
+  wxCheckApi String?   @default("") // 独立防封入口域名（优先于域名库）
+  mianfei    String?   @db.Text // 免费观看的会员（原版字段）
+  txImg      String?   @db.VarChar(255) // 收款码图片
+  short      String    @default("self") // 短链接类型
+  status     String    @default("normal") // normal/hidden/disabled
+  txPassword String    @default("") @db.VarChar(255) // 提现密码
+  loginIp    String?   @db.VarChar(50)
+  loginTime  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // 代理树（自关联）
+  parent   Admin[]  @relation("AdminTree")
+  children Admin[]  @relation("AdminTree")
+
+  @@index([pidTop])
+  @@index([pid])
+}
+
+// ============ 2. admin_logs（后台操作日志） ============
+model AdminLog {
+  @@map("admin_logs")
+  id        Int      @id @default(autoincrement())
+  adminId   Int      @default(0)
+  username  String   @db.VarChar(30)
+  url       String   @db.VarChar(1500)
+  title     String   @db.VarChar(100)
+  content   String   @db.Text
+  ip        String   @db.VarChar(50)
+  useragent String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+
+  @@index([username])
+}
+
+// ============ 3. categories（片库分类） ============
+model Category {
+  @@map("categories")
+  id          Int      @id @default(autoincrement())
+  pid         Int      @default(0)
+  type        String   @default("") @db.VarChar(30) // 原版 type='page' 为前台分类
+  name        String   @db.VarChar(30)
+  nickname    String   @default("") @db.VarChar(50)
+  image       String   @default("") @db.VarChar(255)
+  keywords    String   @default("") @db.VarChar(255)
+  description String   @default("") @db.VarChar(255)
+  diyname     String   @default("") @db.VarChar(30)
+  weigh       Int      @default(0)
+  status      String   @default("normal") @db.VarChar(30)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type, status, weigh])
+}
+
+// ============ 4. stocks（公共片库 · 全外链） ============
+model Stock {
+  @@map("stocks")
+  id         Int       @id @default(autoincrement())
+  cid        Int       @default(0) // 分类ID
+  uid        Int       @default(0) // 归属代理（0=公共）
+  img        String    @db.Text // 封面图 URL（外链）
+  title      String    @db.VarChar(255)
+  url        String    @db.Text // 视频播放 URL（外链）
+  status     Int       @default(1) // 1=启用 2=禁用
+  sort       Int       @default(0)
+  inputTime  DateTime  @default(now())
+  updateTime DateTime  @updatedAt
+
+  stockPrices StockPrice[]
+
+  @@index([cid])
+  @@index([uid])
+  @@index([status])
+}
+
+// ============ 5. stock_prices（代理独立定价） ============
+model StockPrice {
+  @@map("stock_prices")
+  id      Int     @id @default(autoincrement())
+  uid     Int // 代理ID
+  stockId Int // 视频ID
+  price   Decimal @db.Decimal(10, 2)
+
+  stock Stock @relation(fields: [stockId], references: [id])
+
+  @@unique([uid, stockId])
+}
+
+// ============ 6. pay_orders（支付订单 · 扣量落点） ============
+model PayOrder {
+  @@map("pay_orders")
+  id         Int       @id @default(autoincrement())
+  transact   String    @unique @db.VarChar(64) // 订单号
+  uid        Int // 代理ID
+  pid        Int       @default(0) // 上级代理ID
+  pidTop     Int       @default(0) // 顶级代理ID
+  vid        Int       @default(0)
+  user       String    @db.VarChar(255) // 匿名身份串（pay_user 关联）
+  price      Decimal   @default(0) @db.Decimal(10, 2)
+  tcMoney    Decimal   @default(0) @db.Decimal(11, 2) // 总代理提成金额
+  ip         String    @default("0") @db.VarChar(64)
+  ua         String?   @db.VarChar(255) // 浏览器指纹（__fp 或 md5(UA)）
+  isKouliang Int       @default(1) // 1=不扣量 2=扣量
+  isDate     Int       @default(1) // 1=否 2=包日
+  isWeek     Int       @default(1) // 1=否 2=包周
+  isMonth    Int       @default(1) // 1=否 2=包月
+  payChannel String    @default("") @db.VarChar(255)
+  status     Int       @default(2) // 1=已支付 2=未支付
+  des        String?   @db.VarChar(255) // 备注（'支付'/'支付_3'/扣量标注）
+  payTime    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  payedShows PayedShow[]
+
+  @@index([uid, status])
+  @@index([pidTop, status])
+  @@index([isKouliang, createdAt])
+  @@index([ip])
+  @@index([ua])
+}
+
+// ============ 7. payed_shows（已购权益 · 续播判定表） ============
+model PayedShow {
+  @@map("payed_shows")
+  id        Int       @id @default(autoincrement())
+  ip        String?   @db.VarChar(64)
+  ua        String?   @db.VarChar(64) // 浏览器指纹ID
+  orderSn   String?   @db.VarChar(80)
+  vid       Int
+  uid       Int       @default(0) // 归属代理
+  isDate    Int       @default(1)
+  isWeek    Int       @default(1)
+  isMonth   Int       @default(1)
+  expire    DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  order PayOrder? @relation(fields: [orderSn], references: [transact])
+
+  @@index([ip, createdAt, ua]) // 原版同款联合索引
+  @@index([orderSn])
+  @@index([expire])
+}
+
+// ============ 8. pay_channels（支付通道 · 占位） ============
+model PayChannel {
+  @@map("pay_channels")
+  id        Int       @id @default(autoincrement())
+  uid       Int       @default(0) // 代理ID（0=全局）
+  title     String    @db.VarChar(200)
+  model     String    @unique @db.VarChar(200) // "mock" | "epay" | "codepay_wx"
+  appId     String    @db.VarChar(255)
+  appKey    String    @db.VarChar(255)
+  payChannel String   @default("") @db.VarChar(255)
+  payUrl    String    @default("") @db.VarChar(255) // 网关地址
+  status    Int       @default(2) // 1=正常 2=禁用
+  createdAt DateTime  @default(now())
+}
+
+// ============ 9. cash_advances（提现申请） ============
+model CashAdvance {
+  @@map("cash_advances")
+  id        Int       @id @default(autoincrement())
+  uid       Int
+  pid       Int       @default(0)
+  money     Decimal   @db.Decimal(11, 2)
+  poundage  Decimal   @default(0) @db.Decimal(11, 2) // 手续费
+  realMoney Decimal   @default(0) @db.Decimal(11, 2) // 实际到账
+  account   String    @db.VarChar(255) // 收款账号
+  image     String?   @db.VarChar(255) // 收款码
+  type      Int       @default(1) // 0=微信 1=支付宝 2=其他
+  status    Int       @default(0) // 0=待审 1=通过 2=驳回 3=已打款
+  remark    String    @default("") @db.VarChar(255)
+  adminNote String?   @db.VarChar(255)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([uid])
+  @@index([status])
+}
+
+// ============ 10. money_logs（余额流水 · 扣量可审计） ============
+model MoneyLog {
+  @@map("money_logs")
+  id        Int       @id @default(autoincrement())
+  uid       Int
+  money     Decimal   @db.Decimal(11, 2)
+  before    Decimal   @db.Decimal(11, 2)
+  after     Decimal   @db.Decimal(11, 2)
+  type      Int       @default(1) // 1=加 2=减
+  biz       String    @db.VarChar(30) // income/ticheng/kouliang/cash/adjust
+  memo      String    @db.VarChar(255) // 备注（含订单号）
+  orderSn   String?   @db.VarChar(64) // 关联订单号
+  createdAt DateTime  @default(now())
+
+  @@index([uid, createdAt])
+  @@index([biz])
+  @@index([orderSn])
+}
+
+// ============ 11. domain_libs（域名库 · 显式绑定） ============
+model DomainLib {
+  @@map("domain_libs")
+  id        Int       @id @default(autoincrement())
+  domain    String    @db.VarChar(1000) // 域名（不含协议）
+  type      Int       @default(1) // 1=入口 2=落地 3=支付
+  status    Int       @default(1) // 1=正常 0=屏蔽 -1=删除
+  isBind    Int       @default(0) // 1=已绑定
+  bindTime  DateTime?
+  uid       Int       @default(0) // 绑定的代理ID
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([type, status])
+  @@index([uid])
+}
+
+// ============ 12. domain_rules（域名取出规则） ============
+model DomainRule {
+  @@map("domain_rules")
+  id        Int @id @default(autoincrement())
+  getCount  Int @default(5) // 限制取域名数
+}
+
+// ============ 13. mubans（落地模板） ============
+model Muban {
+  @@map("mubans")
+  id        Int      @id @default(autoincrement())
+  uid       Int?
+  title     String?  @db.VarChar(150)
+  muban     String?  @db.VarChar(150) // 模板标识（muban1..muban6 / spa）
+  status    String   @default("1") // "1"启用 "0"关闭
+  image     String?  @db.VarChar(150)
+  desc      String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============ 14. hezis（盒子链接 · 推广落地盒） ============
+model Hezi {
+  @@map("hezis")
+  id        Int      @id @default(autoincrement())
+  uid       Int // 代理ID
+  video     String?  @db.VarChar(225)
+  title     String?  @db.VarChar(20)
+  status    String   @default("1") // "1"开启 "2"关闭
+  createdAt DateTime @default(now())
+}
+
+// ============ 15. configs（系统配置 KV） ============
+model Config {
+  @@map("configs")
+  id      Int     @id @default(autoincrement())
+  name    String  @unique @db.VarChar(30)
+  group   String  @default("") @db.VarChar(30)
+  title   String  @default("") @db.VarChar(100)
+  tip     String  @default("") @db.VarChar(100)
+  type    String  @default("string") @db.VarChar(30)
+  value   String  @db.Text
+  content String? @db.Text
+  rule    String  @default("") @db.VarChar(100)
+  extend  String  @default("") @db.VarChar(255)
+  sort    Int     @default(0)
+}
+
+// ============ 16. links（代理片库 / 推广链接短链） ============
+model Link {
+  @@map("links")
+  id         Int      @id @default(autoincrement())
+  cid        Int      @default(0)
+  uid        Int // 代理ID
+  videoId    Int?
+  videoName  String?  @db.VarChar(50)
+  videoUrl   String?  @db.Text
+  erwei      String?  @db.Text // 收款二维码
+  shortUrl   String?  @db.VarChar(255)
+  money      String   @default("0.00") @db.VarChar(11)
+  money1     String   @default("0.00") @db.VarChar(11) // 包日
+  money2     String   @default("0.00") @db.VarChar(11) // 包月
+  mianfei    Int      @default(0) // 1免费 0不免费
+  readNum    Int      @default(0)
+  status     Int      @default(1)
+  title      String?  @db.VarChar(255)
+  img        String   @default("") @db.VarChar(255)
+  stockId    Int      @default(0)
+  trySee     Int      @default(0) // 试看
+  inputTime  DateTime @default(now())
+
+  @@index([uid])
+}
+
+// ============ 17-19. auth_rules / auth_groups / auth_group_accesses ============
+model AuthRule {
+  @@map("auth_rules")
+  id        Int      @id @default(autoincrement())
+  type      String   @default("file") @db.VarChar(30)
+  pid       Int      @default(0)
+  name      String   @unique @db.VarChar(100)
+  title     String   @db.VarChar(50)
+  icon      String   @default("") @db.VarChar(50)
+  condition String   @default("") @db.VarChar(255)
+  remark    String   @default("") @db.VarChar(255)
+  ismenu    Int      @default(0)
+  weigh     Int      @default(0)
+  status    String   @default("normal") @db.VarChar(30)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuthGroup {
+  @@map("auth_groups")
+  id        Int       @id @default(autoincrement())
+  pid       Int       @default(0)
+  name      String    @db.VarChar(100)
+  rules     String    @db.Text
+  status    String    @default("normal") @db.VarChar(30)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model AuthGroupAccess {
+  @@map("auth_group_accesses")
+  uid     Int
+  groupId Int
+
+  @@id([uid, groupId])
+}
+
+// ============ 20. visitor_tracks（访客记录 · 新增） ============
+model VisitorTrack {
+  @@map("visitor_tracks")
+  id         Int      @id @default(autoincrement())
+  ip         String   @db.VarChar(64)
+  ua         String?  @db.VarChar(512)
+  deviceType String   @default("mobile") // mobile/tablet/pc/other
+  fpId       String?  @db.VarChar(64) // 指纹ID
+  f          Int      @default(0) // 推广代理ID
+  referer    String?  @db.VarChar(255)
+  blocked    Int      @default(0) // 是否被PC拦截
+  createdAt  DateTime @default(now())
+
+  @@index([ip, createdAt])
+  @@index([f, createdAt])
+}
+
+// ============ 21. device_fingerprints（稳定浏览器指纹 · 新增） ============
+model DeviceFingerprint {
+  @@map("device_fingerprints")
+  id        String   @id @db.VarChar(64) // 服务端生成的随机指纹ID
+  uaMd5     String   @db.VarChar(64) // md5(UA) 兜底
+  ua        String?  @db.VarChar(512)
+  firstIp   String?  @db.VarChar(64)
+  lastIp    String?  @db.VarChar(64)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([uaMd5])
+}
+
+// ============ 22. import_tasks（导入任务 · 新增） ============
+model ImportTask {
+  @@map("import_tasks")
+  id        Int       @id @default(autoincrement())
+  type      String    @default("stock") // 导入类型
+  fileName  String    @db.VarChar(255)
+  total     Int       @default(0)
+  success   Int       @default(0)
+  failed    Int       @default(0)
+  errors    Json? // 错误明细（行号+原因）
+  status    Int       @default(0) // 0=待处理 1=处理中 2=完成 3=失败
+  operator  Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ============ 23. pay_users（匿名付费身份 · 兼容原版） ============
+model PayUser {
+  @@map("pay_users")
+  id       Int    @id @default(autoincrement())
+  user     String @unique @db.VarChar(255)
+  password String @db.VarChar(255)
+}
+
+// ============ 24. notifies（通知记录） ============
+model Notify {
+  @@map("notifies")
+  id        Int      @id @default(autoincrement())
+  uid       Int      @default(0)
+  title     String?  @db.VarChar(255)
+  content   String?  @db.VarChar(388)
+  isShow    String   @default("1") // "1"显示 "2"隐藏
+  createdAt DateTime @default(now())
+}
+
+// ============ 25. complains（投诉） ============
+model Complain {
+  @@map("complains")
+  id         Int      @id @default(autoincrement())
+  uid        String?  @db.VarChar(250)
+  status     Int      @default(0)
+  vid        String?  @db.VarChar(11)
+  remark     String?  @db.VarChar(255)
+  type       Int?
+  ip         String?  @db.VarChar(230)
+  ua         String?  @db.VarChar(255)
+  createdAt  DateTime @default(now())
+}
+
+// ============ 26. versions（版本记录） ============
+model Version {
+  @@map("versions")
+  id          Int      @id @default(autoincrement())
+  oldVersion  String   @default("") @db.VarChar(30)
+  newVersion  String   @default("") @db.VarChar(30)
+  packageSize String   @default("") @db.VarChar(30)
+  content     String   @default("") @db.VarChar(500)
+  downloadUrl String   @default("") @db.VarChar(255)
+  enforce     Int      @default(0)
+  weigh       Int      @default(0)
+  status      String   @default("normal") @db.VarChar(30)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ 27. attachments（附件 · 后台图片） ============
+model Attachment {
+  @@map("attachments")
+  id          Int      @id @default(autoincrement())
+  adminId     Int      @default(0)
+  userId      Int      @default(0)
+  url         String   @db.VarChar(255)
+  imagewidth  String   @default("") @db.VarChar(30)
+  imageheight String   @default("") @db.VarChar(30)
+  imagetype   String   @default("") @db.VarChar(30)
+  imageframes Int      @default(0)
+  filesize    Int      @default(0)
+  mimetype    String   @default("") @db.VarChar(100)
+  extparam    String   @default("") @db.VarChar(255)
+  storage     String   @default("local") @db.VarChar(100)
+  sha1        String   @default("") @db.VarChar(40)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  uploadTime  DateTime @default(now())
+}
+
+// ============ 28. cron_tasks（定时任务 · 精简） ============
+model CronTask {
+  @@map("cron_tasks")
+  id         Int      @id @default(autoincrement())
+  type       String   @default("") @db.VarChar(10)
+  title      String   @default("") @db.VarChar(100)
+  content    String   @db.Text
+  schedule   String   @default("") @db.VarChar(100) // Crontab 格式
+  sleep      Int      @default(0)
+  maximums   Int      @default(0)
+  executes   Int      @default(0)
+  weigh      Int      @default(0)
+  status     String   @default("normal") @db.VarChar(30)
+  beginTime  DateTime?
+  endTime    DateTime?
+  executeTime DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
