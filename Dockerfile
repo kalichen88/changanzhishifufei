@@ -1,7 +1,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package.json ./
-RUN npm install --registry=https://registry.npmmirror.com
+COPY package.json package-lock.json ./
+# 使用 lockfile 精确安装（npm ci），避免无锁文件解析触发 npm edgesOut 报错
+RUN npm ci --registry=https://registry.npmmirror.com
 COPY . .
 RUN npx prisma generate
 RUN npm run build
