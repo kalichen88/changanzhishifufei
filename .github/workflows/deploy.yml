@@ -20,6 +20,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
+          # 服务器 2 核小内存，npm ci + nuxt build 可能超过 10 分钟，放宽到 30 分钟
+          command_timeout: 30m
           script: |
             set -e
             cd ${{ secrets.SERVER_PATH }}
@@ -27,7 +29,17 @@ jobs:
             git pull --ff-only origin main
             # 重建并重启应用（MySQL/Redis 已存在则不会重建数据）
             docker compose up -d --build
-            # 等待启动并健康检查
-            sleep 8
-            curl -fsS http://127.0.0.1:3000/health || { echo "健康检查失败"; exit 1; }
+            # 健康检查：轮询最多 90 秒，等待迁移 + 应用完全就绪
+            for i in $(seq 1 30); do
+              if curl -fsS http://127.0.0.1:3000/health >/dev/null 2>&1; then
+                echo "健康检查通过"
+                break
+              fi
+              if [ "$i" = "30" ]; then
+                echo "健康检查失败（90 秒内未就绪）"
+                docker compose logs --tail=50 app || true
+                exit 1
+              fi
+              sleep 3
+            done
             echo "✅ 部署完成"

@@ -182,7 +182,7 @@ curl http://127.0.0.1:3000/health
 | `SERVER_USER` | 部署用户（建议非 root 的专用用户，如 `deploy`） |
 | `SERVER_PORT` | SSH 端口（默认 22） |
 | `SERVER_SSH_KEY` | 服务器上该用户的**私钥**（公钥已加入 `authorized_keys`） |
-| `SERVER_PATH` | 服务器上代码目录（如 `/opt/chang-an-knowledge`） |
+| `SERVER_PATH` | 服务器上代码目录（如 `/home/ubuntu/apps/changanzhishifufei`） |
 
 **私有仓库需要服务器也能 `git pull`**（否则 Actions 拉代码后服务器拉不到）：
 - 推荐：在 GitHub 仓库 Settings → Deploy keys 添加一枚**只读部署公钥**，其私钥配置在服务器部署用户下
