@@ -22,7 +22,18 @@ onMounted(() => {
     return
   }
 
-  invalid.value = true
+  // 无推广码 → 公共池兜底（未归属流量归平台/站长）
+  $fetch<{ code: number; msg: string; data?: { redirect: string; nickname: string } }>('/api/h5/pool')
+    .then((pool) => {
+      if (pool.code === 1 && pool.data?.redirect) {
+        navigateTo(pool.data.redirect, { replace: true })
+      } else {
+        invalid.value = true
+      }
+    })
+    .catch(() => {
+      invalid.value = true
+    })
 })
 </script>
 

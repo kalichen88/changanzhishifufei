@@ -127,6 +127,7 @@ export async function seedIfEmpty(force = false): Promise<{ seeded: boolean; rea
     { name: 'isDouyin', title: '抖音跳出浏览器防封', value: '0', type: 'switch' },
     { name: 'price', title: '单片价格', value: '5', type: 'string' },
     { name: 'issk', title: '是否开启试看', value: '', type: 'string' },
+    { name: 'PUBLIC_POOL_UID', title: '公共池代理ID(无推广码访客归属)', value: '1', type: 'string' },
     { name: 'biaoyu', title: '网站标语', value: '⭐鲜衣怒马少年时，一夜望尽长安花。\n⭐人生自信两百年，会当击水三千里。\n⭐零扣量、高质量、高稳定性的系统。', type: 'editor' },
     { name: 'biaoti', title: '网站标题', value: '商业化知识付费打赏系统', type: 'text' },
   ]
