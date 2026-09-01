@@ -3,6 +3,7 @@ import QRCode from 'qrcode'
 import { currentAdmin } from '../../../utils/admin'
 import { getPushUrl } from '../../../services/domain.service'
 import { encodeId } from '../../../utils/hashids'
+import { absUrl } from '../../../utils/site'
 
 /**
  * GET /api/agent/promo/qrcode?type=dataurl|png 代理推广二维码
@@ -21,7 +22,7 @@ export default defineEventHandler(async (event) => {
   if (!text) {
     try {
       const domain = await getPushUrl(me.id)
-      text = `http://${domain}/t?f=${encodeId(me.id)}`
+      text = absUrl(domain, `/t?f=${encodeId(me.id)}`)
     } catch {
       return { code: 0, msg: '未配置推广域名，无法生成二维码', data: null }
     }

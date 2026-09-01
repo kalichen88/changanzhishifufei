@@ -6,6 +6,7 @@ import { readIdentity } from './fingerprint.service'
 import { getPayedVideos, isAllAccess } from './entitlement.service'
 import { getLandingUrl } from './domain.service'
 import { getConfigInt } from '../utils/config'
+import { absUrl } from '../utils/site'
 
 /**
  * H5 匿名接口公共逻辑（见文档 8.7）
@@ -106,7 +107,7 @@ export async function buildPromoUrl(uid: number, path = '/t'): Promise<string> {
   const { getPushUrl } = await import('./domain.service')
   const domain = await getPushUrl(uid)
   const { encodeId } = await import('../utils/hashids')
-  return `http://${domain}${path}?f=${encodeId(uid)}`
+  return absUrl(domain, `${path}?f=${encodeId(uid)}`)
 }
 
 export function isAgentNormal(agent: ResolvedVisitor['agent']): boolean {

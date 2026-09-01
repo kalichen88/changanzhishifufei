@@ -144,10 +144,14 @@ docker compose up -d --build
 5. 启动生产服务 `node .output/server/index.mjs`（端口 3000）
 
 ### 5.4 反向代理（Nginx 推荐）
+
+**生产实测配置（xj18.cc 泛解析 + Cloudflare 代理）**：站点文件
+`/etc/nginx/sites-available/changan`，`*.xj18.cc` + 裸域统一回源 `127.0.0.1:3000`。
+
 ```
 server {
   listen 80;
-  server_name m.yourdomain.com entry.yourdomain.com;  # 落地 + 入口域名
+  server_name m.yourdomain.com entry.yourdomain.com;  # 落地 + 入口域名（可按子域拆分）
   location / {
     proxy_pass http://127.0.0.1:3000;
     proxy_set_header Host $host;
@@ -158,6 +162,45 @@ server {
 }
 ```
 > 如开启 HTTPS，请正确透传 `X-Forwarded-For`，否则 IP 识别/续播放行会失效。
+
+**走 Cloudflare 代理时**（域名解析到 CF IP），源站 Nginx 必须用 `CF-Connecting-IP`
+还原真实访客 IP，否则 IP 拦截/续播全部失效：
+```nginx
+map $http_cf_connecting_ip $real_ip {
+  default $remote_addr;
+  ~. $http_cf_connecting_ip;
+}
+server {
+  listen 80 default_server;
+  server_name _;
+  location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $real_ip;          # 关键：CF 真实 IP
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
+> 若同时开启 443，需在 443 server 块复用同一 `$real_ip`。HTTPS 可由 Cloudflare
+> 边缘终结（源站只需 :80），也可在源站用 certbot 独立签发。
+
+**域名分配/指派方案（xj18.cc 泛解析，一代理一独立推广域名）**
+
+| 用途 | 域名 | domain_libs 类型 | 绑定 |
+|---|---|---|---|
+| 总后台 | `admin.xj18.cc` | 不入库（直访 /admin） | - |
+| 代理后台 | `agent.xj18.cc` | 不入库（直访 /agent） | - |
+| 公共落地池 | `m.xj18.cc` | type=2 | 未绑定（回退用） |
+| 入口域名（sn 找回） | `entry.xj18.cc` | type=1 | 未绑定 |
+| 支付域名 | `pay.xj18.cc` | type=3 | 未绑定 |
+| 代理A（总代A） | `a1.xj18.cc` | type=2 | uid=2 |
+| 代理B（二级B） | `a2.xj18.cc` | type=2 | uid=3 |
+| 代理C（三级C） | `a3.xj18.cc` | type=2 | uid=4 |
+| 备用池（未来代理） | `a4.xj18.cc`~`aN.xj18.cc` | type=2 | 未绑定 |
+
+泛解析下新增代理只需在后台「域名库」录入新前缀并指派，无需再改 Nginx/DNS。
 
 ### 5.5 健康检查
 ```bash

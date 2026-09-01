@@ -3,6 +3,7 @@ import { prisma } from '../../../utils/prisma'
 import { resolveAgent, getStockPrice } from '../../../services/h5.service'
 import { getLandingUrl } from '../../../services/domain.service'
 import { getConfigBool } from '../../../utils/config'
+import { absUrl } from '../../../utils/site'
 
 /**
  * 支付选项（还原 Index::pays，见文档 8.7③）
@@ -38,7 +39,7 @@ export default defineEventHandler(async (event) => {
   const pay: Array<{ name: string; url: string; flg: string; money: number; img: string }> = [
     {
       name: `单片购买 ${singleMoney} 元`,
-      url: `http://${domain}/api/h5/pay/create?f=${f}&vid=${vid}`,
+      url: absUrl(domain, `/api/h5/pay/create?f=${f}&vid=${vid}`),
       flg: 'dan',
       money: 0,
       img: '/assets/list/muban1/vipicon.png',
@@ -48,7 +49,7 @@ export default defineEventHandler(async (event) => {
   if (agent.dateFee > 0 && agent.bt > 0) {
     pay.push({
       name: `包日观看全部 ${agent.dateFee} 元`,
-      url: `http://${domain}/api/h5/pay/create?f=${f}&vid=${vid}&is_date=2`,
+      url: absUrl(domain, `/api/h5/pay/create?f=${f}&vid=${vid}&is_date=2`),
       flg: 'date_fee',
       money: agent.dateFee,
       img: '/assets/list/muban1/vipicon.png',
@@ -60,7 +61,7 @@ export default defineEventHandler(async (event) => {
   if (showWeek && agent.weekFee > 0) {
     pay.push({
       name: `包周观看全部 ${agent.weekFee} 元`,
-      url: `http://${domain}/api/h5/pay/create?f=${f}&vid=${vid}&is_week=2`,
+      url: absUrl(domain, `/api/h5/pay/create?f=${f}&vid=${vid}&is_week=2`),
       flg: 'week_fee',
       money: agent.weekFee,
       img: '/assets/list/muban1/vipicon.png',
@@ -70,7 +71,7 @@ export default defineEventHandler(async (event) => {
   if (agent.monthFee > 0 && agent.by > 0) {
     pay.push({
       name: `包月观看全部 ${agent.monthFee} 元`,
-      url: `http://${domain}/api/h5/pay/create?f=${f}&vid=${vid}&is_month=2`,
+      url: absUrl(domain, `/api/h5/pay/create?f=${f}&vid=${vid}&is_month=2`),
       flg: 'month_fee',
       money: agent.monthFee,
       img: '/assets/list/muban1/vipicon.png',

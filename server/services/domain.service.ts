@@ -119,11 +119,10 @@ export async function bindDomainToAgent(
   if (!d) return { ok: false, msg: '域名不存在' }
   if (d.status !== 1) return { ok: false, msg: '域名已被屏蔽，无法指派' }
 
-  // 同 type 已绑定给他人 → 阻断
-  const conflict = await tx.domainLib.findFirst({
-    where: { type: d.type, status: 1, isBind: 1, uid: { not: uid } },
-  })
-  if (conflict) return { ok: false, msg: `该类型域名已绑定给代理 ${conflict.uid}` }
+  // 该域名已被其他代理绑定 → 阻断（一域名只能绑定一个代理）
+  if (d.isBind === 1 && d.uid !== 0 && d.uid !== uid) {
+    return { ok: false, msg: `该域名已绑定给代理 ${d.uid}` }
+  }
 
   // 该代理该类型已有绑定 → 先解绑旧的
   await tx.domainLib.updateMany({ where: { uid, type: d.type }, data: { isBind: 0, uid: 0, bindTime: null } })

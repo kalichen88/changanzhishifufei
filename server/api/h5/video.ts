@@ -6,6 +6,7 @@ import { getEntitlement } from '../../services/h5.service'
 import { isAllAccess } from '../../services/entitlement.service'
 import { getLandingUrl } from '../../services/domain.service'
 import { obfuscate } from '../../utils/obfuscate'
+import { absUrl } from '../../utils/site'
 
 /**
  * 视频播放/权益校验（还原 Index::video，见文档 8.7④）
@@ -64,7 +65,7 @@ export default defineEventHandler(async (event) => {
   if (entitlement.sn) {
     const entryDomain = await getLandingUrl(0, 1).catch(() => '')
     if (entryDomain) {
-      recoverUrl = `http://${entryDomain}/?sn=${entitlement.sn}&f=${f}`
+      recoverUrl = absUrl(entryDomain, `/?sn=${entitlement.sn}&f=${f}`)
     }
   }
 

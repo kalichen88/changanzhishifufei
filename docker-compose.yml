@@ -56,7 +56,8 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
     ports:
-      - "3000:3000"
+      # 由 Nginx 反代接入，应用端口收回内网，避免绕过 Nginx 直连
+      - "127.0.0.1:3000:3000"
     # 生产镜像未拷贝 node_modules/.bin，故用完整路径调用 prisma CLI 执行迁移
     command: sh -c "node ./node_modules/prisma/build/index.js migrate deploy && node .output/server/index.mjs"
 

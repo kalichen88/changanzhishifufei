@@ -11,3 +11,8 @@ prisma/*.db
 tmpcheck
 .vscode
 deploy/.env
+
+# 本地临时脚本（不入库）
+q.js
+db_domains.cjs
+changan_nginx.conf

@@ -7,6 +7,7 @@ import { resolveAgent, getEntitlement } from '../../services/h5.service'
 import { getLandingUrl } from '../../services/domain.service'
 import { isAllAccess } from '../../services/entitlement.service'
 import { getConfigInt } from '../../utils/config'
+import { absUrl } from '../../utils/site'
 
 /**
  * 视频列表（还原 Index::vlist，见文档 8.7①）
@@ -89,8 +90,8 @@ export default defineEventHandler(async (event) => {
       title: s.title,
       img: s.img,
       url: isPayed
-        ? `http://${landing}/api/h5/video?vid=${s.id}&f=${f}`
-        : `http://${payDomain || landing}/api/h5/pay/options?vid=${s.id}&f=${f}`,
+        ? absUrl(landing, `/api/h5/video?vid=${s.id}&f=${f}`)
+        : absUrl(payDomain || landing, `/api/h5/pay/options?vid=${s.id}&f=${f}`),
       vid_url: isPayed ? s.url : '', // 已购才下发音源，未购不外泄
       money,
       rand: Math.floor(Math.random() * (7777 - 999 + 1)) + 999,
