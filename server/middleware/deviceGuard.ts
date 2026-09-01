@@ -11,7 +11,7 @@ import { prisma } from '../utils/prisma'
  */
 export default defineEventHandler(async (event) => {
   const url = event.path || ''
-  if (url.startsWith('/admin') || url.startsWith('/agent')) console.log('[deviceGuard][DEBUG] admin/agent path=', JSON.stringify(url))
+  console.log('[deviceGuard][DEBUG] ALL path=', JSON.stringify(url))
 
   // 放行：静态资源 / 后台 / API 后台
   if (
