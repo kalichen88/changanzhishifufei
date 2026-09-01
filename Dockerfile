@@ -11,6 +11,8 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
+# Prisma 迁移/查询引擎（musl）依赖 libssl，Alpine 需显式安装
+RUN apk add --no-cache openssl
 COPY --from=build /app/.output ./.output
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
