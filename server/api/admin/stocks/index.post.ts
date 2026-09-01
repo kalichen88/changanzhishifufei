@@ -8,6 +8,8 @@ export default defineEventHandler(async (event) => {
   const title = String(body.title || '').trim()
   const img = String(body.img || '').trim()
   const url = String(body.url || '').trim()
+  const url2 = String(body.url2 || '').trim()
+  const url3 = String(body.url3 || '').trim()
 
   if (!title) return { code: 0, msg: '请输入标题', data: null }
   if (!/^https?:\/\//.test(img) && !/^\/\//.test(img)) {
@@ -24,6 +26,8 @@ export default defineEventHandler(async (event) => {
       title,
       img,
       url,
+      url2: url2 || null,
+      url3: url3 || null,
       status: Number(body.status || 1) === 2 ? 2 : 1,
       sort: Number(body.sort || 0),
     },

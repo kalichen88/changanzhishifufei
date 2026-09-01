@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
 
   const payload = {
     payed,
-    link: { url: link.url, img: link.img, title: link.title },
+    link: { url: link.url, url2: link.url2, url3: link.url3, img: link.img, title: link.title },
   }
 
   if (encode === '0') {

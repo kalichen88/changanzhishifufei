@@ -145,7 +145,7 @@ function downloadTemplate() {
       <el-form label-width="100px">
         <el-form-item label="选择文件">
           <input type="file" accept=".xlsx,.xls,.csv" @change="onFileChange" />
-          <div style="font-size: 12px; color: #909399; margin-top: 6px">支持 .xlsx / .xls / .csv，≤10MB，≤5000 行。表头：标题 | 图片地址 | 视频地址</div>
+          <div style="font-size: 12px; color: #909399; margin-top: 6px">支持 .xlsx / .xls / .csv，≤10MB，≤5000 行。<br />表头（模板）：视频标题 | 视频封面链接 | 视频播放链接 | 视频资源文件链接 | 资源链接2（后两列可留空）</div>
         </el-form-item>
         <el-form-item label="自动归类">
           <el-checkbox v-model="fileDialog.strip">按标题【分类】自动匹配分类（未匹配则保留原名）</el-checkbox>

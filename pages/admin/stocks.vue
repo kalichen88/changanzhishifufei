@@ -45,7 +45,7 @@ onMounted(() => {
 
 function openCreate() {
   dialog.edit = false
-  dialog.form = { title: '', img: '', url: '', cid: 0, status: 1, sort: 0 }
+  dialog.form = { title: '', img: '', url: '', url2: '', url3: '', cid: 0, status: 1, sort: 0 }
   dialog.show = true
 }
 
@@ -66,7 +66,7 @@ async function submitStock() {
   const r = await api(url, {
     method,
     body: {
-      title: f.title, img: f.img, url: f.url, cid: Number(f.cid) || 0,
+      title: f.title, img: f.img, url: f.url, url2: f.url2, url3: f.url3, cid: Number(f.cid) || 0,
       status: Number(f.status) || 1, sort: Number(f.sort) || 0,
     },
   })
@@ -131,6 +131,12 @@ async function remove(row: any) {
       <el-table-column label="视频地址" min-width="160" show-overflow-tooltip>
         <template #default="{ row }"><span style="color: #2d8cf0">{{ row.url }}</span></template>
       </el-table-column>
+      <el-table-column label="资源文件/备用" min-width="180" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span v-if="row.url2 || row.url3" style="color: #67c23a">{{ row.url2 || row.url3 }}</span>
+          <span v-else style="color: #c0c4cc">-</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="sort" label="排序" width="70" />
       <el-table-column label="状态" width="80">
         <template #default="{ row }">
@@ -157,6 +163,8 @@ async function remove(row: any) {
         <el-form-item label="标题"><el-input v-model="dialog.form.title" placeholder="建议带【分类】前缀，导入时自动归类" /></el-form-item>
         <el-form-item label="封面图"><el-input v-model="dialog.form.img" placeholder="封面图 URL（外链）" /></el-form-item>
         <el-form-item label="视频地址"><el-input v-model="dialog.form.url" placeholder="视频播放 URL（外链）" /></el-form-item>
+        <el-form-item label="资源文件"><el-input v-model="dialog.form.url2" placeholder="视频资源文件链接（m3u8 流，可选，主源失败自动回退）" /></el-form-item>
+        <el-form-item label="备用链接"><el-input v-model="dialog.form.url3" placeholder="资源链接2（备用线路，可选）" /></el-form-item>
         <el-form-item label="分类">
           <el-select v-model="dialog.form.cid" placeholder="选择分类" style="width: 100%">
             <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />

@@ -102,6 +102,8 @@ model Stock {
   img        String    @db.Text // 封面图 URL（外链）
   title      String    @db.VarChar(255)
   url        String    @db.Text // 视频播放 URL（外链）
+  url2       String?   @db.Text // 视频资源文件链接（m3u8 流 / 备用源）
+  url3       String?   @db.Text // 资源链接2（备用 / 多线路）
   status     Int       @default(1) // 1=启用 2=禁用
   sort       Int       @default(0)
   inputTime  DateTime  @default(now())

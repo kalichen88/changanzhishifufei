@@ -2,6 +2,7 @@
 // 视频详情/播放（已购→播放外链；未购→封面+支付弹层）
 definePageMeta({ layout: 'h5' })
 import { showToast } from 'vant'
+import Hls from 'hls.js'
 
 const h5 = useH5()
 const route = useRoute()
@@ -10,13 +11,71 @@ const router = useRouter()
 const vid = Number(route.params.id)
 const loading = ref(true)
 const payed = ref(false)
-const link = ref<{ url: string; img: string; title: string } | null>(null)
+const link = ref<{ url: string; url2?: string; url3?: string; img: string; title: string } | null>(null)
 const desc = ref('')
 const expire = ref('')
 const recoverUrl = ref('')
 const errorMsg = ref('')
 const payShow = ref(false)
 const favShow = ref(false)
+
+// ---- 回退播放（主源 → 资源文件源 → 备用源） ----
+const videoEl = ref<HTMLVideoElement | null>(null)
+const playSrc = ref('')
+const srcList = ref<string[]>([])
+const srcIndex = ref(0)
+let hls: Hls | null = null
+
+function isM3u8(src: string) {
+  return /\.m3u8(\?|$)/i.test(src) || src.includes('m3u8')
+}
+
+function loadCurrentSrc() {
+  if (srcIndex.value >= srcList.value.length) {
+    showToast('所有视频源均无法播放')
+    return
+  }
+  const src = srcList.value[srcIndex.value]
+  playSrc.value = src
+  if (hls) {
+    hls.destroy()
+    hls = null
+  }
+  if (isM3u8(src) && Hls.isSupported() && videoEl.value) {
+    hls = new Hls()
+    hls.loadSource(src)
+    hls.attachMedia(videoEl.value)
+    hls.on(Hls.Events.ERROR, (_evt, data) => {
+      if (data.fatal) {
+        hls?.destroy()
+        hls = null
+        nextSrc()
+      }
+    })
+  }
+}
+
+function nextSrc() {
+  // hls.js 正在接管播放时由其自行管理错误与回退，避免原生 error 重复跳源
+  if (hls) return
+  srcIndex.value++
+  loadCurrentSrc()
+}
+
+function startPlay() {
+  if (!link.value) return
+  srcList.value = [link.value.url, link.value.url2, link.value.url3].filter((s): s is string => !!s)
+  srcIndex.value = 0
+  nextTick(() => loadCurrentSrc())
+}
+
+watch(payed, (v) => {
+  if (v && link.value) startPlay()
+})
+
+onBeforeUnmount(() => {
+  if (hls) hls.destroy()
+})
 
 onMounted(async () => {
   h5.load()
@@ -39,7 +98,7 @@ async function check() {
     const r = await $fetch<{
       code: number
       msg: string
-      data?: { payed: boolean; link: { url: string; img: string; title: string }; desc: string; expire: string; recoverUrl: string }
+      data?: { payed: boolean; link: { url: string; url2?: string; url3?: string; img: string; title: string }; desc: string; expire: string; recoverUrl: string }
     }>(`/api/h5/video?vid=${vid}&f=${encodeURIComponent(h5.f.value)}`)
     if (r.code === 1 && r.data) {
       payed.value = true
@@ -101,7 +160,7 @@ const paidSince = computed(() => (payed.value && link.value ? `${desc.value || '
     <template v-else-if="link">
       <!-- 已购：播放器（外链） -->
       <div v-if="payed" class="player-wrap">
-        <video v-if="link.url" :src="link.url" controls autoplay playsinline class="player" :poster="link.img" />
+        <video v-if="link.url" ref="videoEl" :src="playSrc || link.url" controls autoplay playsinline class="player" :poster="link.img" @error="nextSrc" />
         <div v-else class="player-empty">视频源缺失</div>
       </div>
 

@@ -12,6 +12,8 @@ export interface ImportRow {
   title: string
   img: string
   url: string
+  url2?: string // 视频资源文件链接（m3u8 流 / 备用源）
+  url3?: string // 资源链接2（备用 / 多线路）
   sort?: number
   status?: number
 }
@@ -62,7 +64,12 @@ export function extractCategoryName(title: string): string | null {
   return m ? m[0] : null
 }
 
-/** 解析 .xlsx/.csv Buffer → 行数组（表头：标题/封面URL/视频URL/分类/排序/状态） */
+/**
+ * 解析 .xlsx/.csv Buffer → 行数组
+ * 兼容两套表头：
+ *  - 外部资源方模板：视频标题/视频封面链接/视频播放链接/视频资源文件链接/资源链接2
+ *  - 站内模板：标题/封面URL/视频URL/分类/排序/状态
+ */
 export function parseSheetFile(
   buffer: Buffer,
   opts: { fileName?: string } = {},
@@ -82,9 +89,11 @@ export function parseSheetFile(
       return ''
     }
     rows.push({
-      title: pick('标题', 'title', 'Title', '名称', 'name'),
-      img: pick('封面URL', '封面', 'img', '图片', 'image', '封面图'),
-      url: pick('视频URL', '视频', 'url', '链接', '地址', 'video', '播放地址'),
+      title: pick('视频标题', '标题', 'title', 'Title', '名称', 'name'),
+      img: pick('视频封面链接', '封面URL', '封面', 'img', '图片', 'image', '封面图'),
+      url: pick('视频播放链接', '视频URL', '视频', 'url', '链接', '地址', 'video', '播放地址'),
+      url2: pick('视频资源文件链接', '视频资源链接', '资源文件链接', 'url2'),
+      url3: pick('资源链接2', '备用链接', '备用线路', 'url3'),
       sort: Number(pick('排序', 'sort') || 0),
       status: Number(pick('状态', 'status') || 1),
     })
@@ -124,6 +133,8 @@ export async function importStocks(
     const title = (r.title || '').trim()
     const img = (r.img || '').trim()
     const url = (r.url || '').trim()
+    const url2 = (r.url2 || '').trim()
+    const url3 = (r.url3 || '').trim()
 
     // 校验
     if (!title) {
@@ -140,6 +151,15 @@ export async function importStocks(
     }
     if (!/^https?:\/\//.test(url) && !/^\/\//.test(url)) {
       errors.push({ row: rowNo, reason: '视频URL 必须为 http(s) 外链', raw: url })
+      continue
+    }
+    // 资源文件链接 / 备用链接为可选：有值时必须为外链
+    if (url2 && !/^https?:\/\//.test(url2) && !/^\/\//.test(url2)) {
+      errors.push({ row: rowNo, reason: '视频资源文件链接 必须为 http(s) 外链', raw: url2 })
+      continue
+    }
+    if (url3 && !/^https?:\/\//.test(url3) && !/^\/\//.test(url3)) {
+      errors.push({ row: rowNo, reason: '资源链接2 必须为 http(s) 外链', raw: url3 })
       continue
     }
 
@@ -171,6 +191,8 @@ export async function importStocks(
           title: finalTitle,
           img,
           url,
+          url2: url2 || null,
+          url3: url3 || null,
           status: r.status === 2 ? 2 : 1,
           sort: Number(r.sort || 0),
         },
@@ -190,12 +212,12 @@ export async function importStocks(
   return { total, success, failed, errors }
 }
 
-/** 生成导入模板 Buffer（xlsx） */
+/** 生成导入模板 Buffer（xlsx）——表头与外部资源方模板一致 */
 export function buildTemplateBuffer(): Buffer {
   const data = [
-    ['标题', '封面URL', '视频URL', '分类', '排序', '状态'],
-    ['【美景】云海日出', 'https://picsum.photos/seed/demo1/300/400', 'https://example.com/video.mp4', '美景', 0, 1],
-    ['【运营】短视频起号', 'https://picsum.photos/seed/demo2/300/400', 'https://example.com/video2.mp4', '运营', 0, 1],
+    ['视频标题', '视频封面链接', '视频播放链接', '视频资源文件链接', '资源链接2'],
+    ['【美景】云海日出', 'https://picsum.photos/seed/demo1/300/400', 'https://example.com/video.mp4', 'https://example.com/index.m3u8', ''],
+    ['【运营】短视频起号', 'https://picsum.photos/seed/demo2/300/400', 'https://example.com/video2.mp4', '', ''],
   ]
   const ws = XLSX.utils.aoa_to_sheet(data)
   const wb = XLSX.utils.book_new()

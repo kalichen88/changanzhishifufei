@@ -15,6 +15,8 @@ export default defineEventHandler(async (event) => {
   if (body.title !== undefined) data.title = String(body.title).trim()
   if (body.img !== undefined) data.img = String(body.img).trim()
   if (body.url !== undefined) data.url = String(body.url).trim()
+  if (body.url2 !== undefined) data.url2 = String(body.url2).trim() || null
+  if (body.url3 !== undefined) data.url3 = String(body.url3).trim() || null
   if (body.cid !== undefined) data.cid = Number(body.cid)
   if (body.sort !== undefined) data.sort = Number(body.sort)
   if (body.status !== undefined) data.status = Number(body.status) === 2 ? 2 : 1
