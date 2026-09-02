@@ -6,6 +6,9 @@ export default defineNuxtConfig({
     '/admin/**': { ssr: false },
     '/agent/**': { ssr: false },
   },
+  // 组件统一用文件基本名注册（components/h5/VideoCard.vue → <VideoCard>），
+  // 还原原版模板写法；否则 Vue 找不到组件会渲染成空的 <videocard> 占位元素。
+  components: [{ path: '~/components', pathPrefix: false }],
   css: [
     'vant/lib/index.css',
     'element-plus/dist/index.css',
