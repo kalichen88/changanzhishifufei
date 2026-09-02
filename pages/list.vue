@@ -12,6 +12,10 @@ const page = ref(1)
 const loading = ref(false)
 const finished = ref(false)
 const refreshing = ref(false)
+// 串行锁 + 请求代次：杜绝 van-list @load 与 onMounted/下拉刷新并发重复拉取，
+// 并保证慢响应不会覆盖新请求结果（修复“首屏漏第 1 页、重复加载”问题）
+let loadBusy = false
+let loadSeq = 0
 const noticeText = ref('温馨提示：如果付款没有跳转，请到已购买里观看。保存链接或二维码，长期免费观看')
 const favShow = ref(false)
 
@@ -33,7 +37,7 @@ onMounted(async () => {
     return
   }
   await fetchVersion()
-  load()
+  load(1)
 })
 
 async function fetchVersion() {
@@ -45,38 +49,53 @@ async function fetchVersion() {
   }
 }
 
-async function load() {
-  if (!h5.ready()) return
+async function load(p: number) {
+  if (!h5.ready() || loadBusy) return
+  loadBusy = true
+  const mySeq = ++loadSeq
   loading.value = true
   try {
     const r = await $fetch<{ code: number; total: number; data: any[] }>(
-      `/api/h5/vlist?f=${encodeURIComponent(h5.f.value)}&page=${page.value}&limit=10`,
+      `/api/h5/vlist?f=${encodeURIComponent(h5.f.value)}&page=${p}&limit=10`,
     )
+    if (mySeq !== loadSeq) return // 已被更新的请求取代，丢弃过期响应
     if (r.code !== 1) {
       showToast('加载失败')
       return
     }
     total.value = r.total || 0
     const arr = r.data || []
-    list.value = page.value === 1 ? arr : [...list.value, ...arr]
+    if (p === 1) {
+      list.value = arr
+      page.value = 1
+    } else {
+      // 去重后追加，避免同页被并发重复拉取时产生重复卡片
+      const ids = new Set(list.value.map((it) => it.id))
+      const fresh = arr.filter((it) => !ids.has(it.id))
+      list.value = [...list.value, ...fresh]
+      page.value = p
+    }
     if (list.value.length >= total.value || arr.length === 0) finished.value = true
+  } catch {
+    // 网络异常：保留现有列表，释放锁供重试
   } finally {
-    loading.value = false
+    if (mySeq === loadSeq) {
+      loading.value = false
+      loadBusy = false
+    }
     refreshing.value = false
   }
 }
 
 function onLoad() {
-  if (!finished.value) {
-    page.value += 1
-    load()
-  }
+  if (!finished.value && !loadBusy) load(page.value + 1)
 }
 
 function onRefresh() {
-  page.value = 1
+  loadSeq += 1 // 使在途旧响应过期
+  loadBusy = false
   finished.value = false
-  load()
+  load(1)
 }
 
 function openVideo(item: any) {
@@ -115,7 +134,14 @@ function openFav() {
       <div v-if="list.length === 0 && !loading" class="empty-tip">
         <van-empty description="暂无视频，请联系代理" />
       </div>
-      <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" @load="onLoad" />
+      <!-- immediate-check=false：首屏由 onMounted load() 拉第 1 页，避免挂载即 @load 把页码顶到第 2 页（漏第 1 页 + 重复加载） -->
+      <van-list
+        v-model:loading="loading"
+        :finished="finished"
+        :immediate-check="false"
+        finished-text="没有更多了"
+        @load="onLoad"
+      />
     </van-pull-refresh>
 
     <AppTabbar />
