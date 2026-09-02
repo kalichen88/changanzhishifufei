@@ -23,7 +23,7 @@ const fmt = (n: number) => (n >= 10000 ? `${(n / 10000).toFixed(1)}w` : String(n
 <template>
   <div class="cc_card" @click="emit('click', props.item)">
     <div class="cover-wrap">
-      <img class="cover" :src="props.item.img" :alt="props.item.title" loading="lazy" />
+      <img class="cover" :src="mediaProxyUrl(props.item.img)" :alt="props.item.title" loading="lazy" />
       <div v-if="props.item.pay === 1" class="tag tag-paid">已购</div>
       <div v-else class="tag">¥{{ props.item.money }}</div>
       <div class="play">

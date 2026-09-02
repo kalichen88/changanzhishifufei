@@ -11,7 +11,21 @@ function isMobile(): boolean {
 
 const blocked = ref(false)
 onMounted(() => {
-  if (!isMobile()) {
+  // 预览模式（?preview=1）→ 允许 PC 访问，便于后台/代理在电脑上核对 H5 页面
+  if (route.query.preview === '1') {
+    try {
+      sessionStorage.setItem('h5_preview', '1')
+    } catch {
+      /* ignore */
+    }
+  }
+  let previewing = false
+  try {
+    previewing = sessionStorage.getItem('h5_preview') === '1'
+  } catch {
+    previewing = false
+  }
+  if (!previewing && !isMobile()) {
     blocked.value = true
     window.location.replace('/pc-blocked')
   }

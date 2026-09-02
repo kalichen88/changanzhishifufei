@@ -119,7 +119,7 @@ async function remove(row: any) {
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column label="封面" width="70">
         <template #default="{ row }">
-          <el-image :src="row.img" fit="cover" style="width: 44px; height: 58px; border-radius: 4px">
+          <el-image :src="mediaProxyUrl(row.img)" fit="cover" style="width: 44px; height: 58px; border-radius: 4px">
             <template #error><div style="width: 44px; height: 58px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #c0c4cc">无图</div></template>
           </el-image>
         </template>

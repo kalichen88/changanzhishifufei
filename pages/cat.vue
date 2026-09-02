@@ -68,7 +68,7 @@ function onLoad() {
     <!-- 分类宫格 -->
     <div v-if="cats.length" class="cat-grid">
       <div v-for="c in cats" :key="c.id" class="cat-item" :class="{ active: activeCid === c.id }" @click="selectCat(c.id)">
-        <img v-if="c.image" :src="c.image" class="cat-icon" alt="" />
+        <img v-if="c.image" :src="mediaProxyUrl(c.image)" class="cat-icon" alt="" />
         <div v-else class="cat-icon cat-ph">📁</div>
         <span class="cat-name">{{ c.title }}</span>
       </div>

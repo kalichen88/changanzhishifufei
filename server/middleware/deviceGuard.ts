@@ -1,4 +1,5 @@
 import { defineEventHandler } from 'h3'
+import { setCookie, getCookie } from 'h3'
 import { detectDevice, detectBuiltinBrowser } from '../utils/device'
 import { getRealIp, getUa } from '../utils/ip'
 import { getConfigBool } from '../utils/config'
@@ -20,6 +21,8 @@ export default defineEventHandler(async (event) => {
     url.startsWith('/_ipx') ||
     url.startsWith('/favicon') ||
     url.startsWith('/assets') ||
+    // 媒体代理：供 H5 与后台预览封面/播放源同源回传（仅为公开媒体转发，放行 PC 不影响业务拦截）
+    url.startsWith('/api/h5/proxy') ||
     url.startsWith('/admin') ||
     url.startsWith('/agent') ||
     url.startsWith('/api/admin') ||
@@ -28,6 +31,17 @@ export default defineEventHandler(async (event) => {
     url.startsWith('/.env') ||
     url === '/health'
   ) {
+    return
+  }
+
+  // 预览模式：后台/代理在 PC 上调试 H5 时，URL 加 ?preview=1（或已持 h5_preview Cookie）
+  // 首个请求写入 HttpOnly=false 的 Cookie，使后续同域 API 请求自动携带，整条链路放行。
+  const isPreview = getCookie(event, 'h5_preview') === '1'
+  const previewReq = getQuery(event).preview === '1'
+  if (previewReq) {
+    setCookie(event, 'h5_preview', '1', { path: '/', maxAge: 3600, sameSite: 'lax' })
+  }
+  if (isPreview || previewReq) {
     return
   }
 

@@ -114,7 +114,7 @@ async function simulatePay(transact: string) {
   <van-popup :show="props.show" position="bottom" round class="pay-sheet" @update:show="(v) => emit('update:show', v)">
     <div style="padding: 16px 16px 24px">
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px">
-        <img :src="props.img" style="width: 60px; height: 80px; object-fit: cover; border-radius: 6px" alt="" />
+        <img :src="mediaProxyUrl(props.img)" style="width: 60px; height: 80px; object-fit: cover; border-radius: 6px" alt="" />
         <div style="flex: 1; min-width: 0">
           <div style="font-size: 14px; font-weight: 600; color: #323233; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
             {{ stockTitle || props.title }}

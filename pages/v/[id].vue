@@ -64,7 +64,7 @@ function nextSrc() {
 
 function startPlay() {
   if (!link.value) return
-  srcList.value = [link.value.url, link.value.url2, link.value.url3].filter((s): s is string => !!s)
+  srcList.value = [mediaProxySrc(link.value.url), mediaProxySrc(link.value.url2), mediaProxySrc(link.value.url3)].filter((s): s is string => !!s)
   srcIndex.value = 0
   nextTick(() => loadCurrentSrc())
 }
@@ -160,13 +160,13 @@ const paidSince = computed(() => (payed.value && link.value ? `${desc.value || '
     <template v-else-if="link">
       <!-- 已购：播放器（外链） -->
       <div v-if="payed" class="player-wrap">
-        <video v-if="link.url" ref="videoEl" :src="playSrc || link.url" controls autoplay playsinline class="player" :poster="link.img" @error="nextSrc" />
+        <video v-if="link.url" ref="videoEl" :src="playSrc || mediaProxySrc(link.url)" controls autoplay playsinline class="player" :poster="mediaProxyUrl(link.img)" @error="nextSrc" />
         <div v-else class="player-empty">视频源缺失</div>
       </div>
 
       <!-- 未购：封面 + 打赏后观影 -->
       <div v-else class="unpaid-wrap">
-        <img :src="link.img" class="unpaid-cover" alt="" />
+        <img :src="mediaProxyUrl(link.img)" class="unpaid-cover" alt="" />
         <div class="unpaid-mask">
           <van-icon name="play-circle-o" class="unpaid-play" />
           <span class="unpaid-tip">打赏后观影</span>
